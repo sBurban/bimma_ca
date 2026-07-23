@@ -13,3 +13,5 @@ error: pnpm install --strict-peer-dependencies=false
 - y
 
 > pnpm install
+
+> pnpm install @nestjs/config @nestjs/sequelize sequelize sequelize-typescript pg

@@ -1,0 +1,45 @@
+services:
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: bimm-app-postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - bimm-app-network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+    networks:
+      - bimm-app-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: bimm-app-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - bimm-app-network
+
+volumes:
+  postgres_data:
+networks:
+  bimm-app-network:
+    driver: bridge
