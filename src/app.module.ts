@@ -6,6 +6,9 @@ import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { VehicleMakesModule } from './modules/vehicle-makes/vehicle-makes.module';
+import { VehicleMakeTypesModule } from './modules/vehicle-make-types/vehicle-make-types.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
@@ -25,6 +28,8 @@ import { SequelizeModule } from '@nestjs/sequelize';
         logging: false,
       }),
     }),
+    VehicleMakesModule,
+    VehicleMakeTypesModule,
   ],
   controllers: [
     AppController,
