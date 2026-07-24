@@ -6,6 +6,7 @@ import { XML_FIND_ALL, XML_FIND_MAKEID } from 'src/common/constants/xml_uris.con
 
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize as TSsequelize } from 'sequelize-typescript';
+import type { FindAttributeOptions } from 'sequelize';
 
 import { VehicleMakes } from './models/vehicle_makes.model';
 import { VehicleMakeTypes } from '../vehicle-make-types/models/vehicle_make_types.model';
@@ -50,40 +51,39 @@ export class VehicleMakesService {
   }
 
   async findOne(makeId: number): Promise<VehicleMakes> {
-    // if (makeId) {
-    //   const jObj = await this.xmlUtilsService.getXML(XML_FIND_MAKEID(makeId));
-    //   return jObj;
-    // }
-    const vecIncludeItem = { model: VehicleMakeTypes, required: true };
+    // Fetch extended object with Renamed Attributes
+    const typeAttributes = [['vehicle_type_id', 'typeId'], ['vehicle_type_name', 'typeName']] as FindAttributeOptions;
+    const makeAttributes = [['make_id', 'makeId'], ['make_name', 'makeName']] as FindAttributeOptions;
+    const vecIncludeItem = {
+      model: VehicleMakeTypes, required: true,
+      attributes: typeAttributes,
+    };
     const vecMakeOptions = {
       where: { make_id: makeId },
+      attributes: makeAttributes,
       include: [vecIncludeItem],
     };
     const vecMake = await this.vehicleMakeModel.findOne(vecMakeOptions);
-    console.log("🚀 ~ VehicleMakesService ~ findOne ~ vecMake:", vecMake)
-    if (!vecMake) {
-      // this.vecMakeTypeService
-      const added = await this.vecMakeTypeService.create({ makeId, skip: true });
-      console.log('🚀 ~ vehicle_makes.service.ts:71 ~ VehicleMakesService ~ findOne ~ added:', added);
-      if (added) {
-        const vMake2 = await this.vehicleMakeModel.findOne(vecMakeOptions);
-        console.log('🚀 ~ vehicle_makes.service.ts:74 ~ VehicleMakesService ~ findOne ~ vMake2:', vMake2);
-        if (vMake2) { return vMake2; }
-        else {
-          // throw new NotFoundException(`VehicleMake with ID ${makeId} not found`);
-          const newVecOptions = { ...vecMakeOptions, include: [{ ...vecIncludeItem, require: false }] }
-          const vMake3 = await this.vehicleMakeModel.findOne(newVecOptions);
-          console.log('🚀 ~ vehicle_makes.service.ts:80 ~ VehicleMakesService ~ findOne ~ vMake3:', vMake3);
-          if (vMake3) { return vMake3; }
-        }
-      }
-    }
+    console.log("🚀 ~ VehicleMakesService ~ findOne ~ vecMake:", !!vecMake)
+    if (vecMake) return vecMake;
 
-    if (!vecMake) {
+    // Create the "MakeType" records, then fetch the extended "VehicleMake" object.
+    const added = await this.vecMakeTypeService.create({ makeId, skip: true });
+    console.log('🚀 ~ vehicle_makes.service.ts:71 ~ VehicleMakesService ~ findOne ~ added:', !!added);
+    if (added) {
+      const vMake2 = await this.vehicleMakeModel.findOne(vecMakeOptions);
+      console.log('🚀 ~ vehicle_makes.service.ts:74 ~ VehicleMakesService ~ findOne ~ vMake2:', !!vMake2);
+      if (vMake2) return vMake2;
+    }
+    // Last Fail-Handler
+    // If for some reason "vMake2" fails, load record with incomplete data.
+    const newVecOptions = { ...vecMakeOptions, include: [{ ...vecIncludeItem, require: false }] }
+    const vMake3 = await this.vehicleMakeModel.findOne(newVecOptions);
+    console.log('🚀 ~ vehicle_makes.service.ts:80 ~ VehicleMakesService ~ findOne ~ vMake3:', !!vMake3);
+    if (!vMake3) {
       throw new NotFoundException(`VehicleMake with ID ${makeId} not found`);
     }
-
-    return vecMake;
+    return vMake3;
   }
 
   async findAll(limit: number, page: number): Promise<VehicleMakes[]> {
@@ -98,9 +98,6 @@ export class VehicleMakesService {
     }
 
     const vecMakes = await this.vehicleMakeModel.findAll({
-      // where: {
-      //   make_id: id
-      // },
       limit: limit == 0 ? undefined : limit,
       offset: limit == 0 ? undefined : page * 1000,
     });

@@ -18,27 +18,32 @@ export class VehicleMakeTypesService {
   ) {}
 
   async create({ makeId, skip = false }: { makeId: number; skip?: boolean; }) {
+    // Checks if at least 1 "Type" exists for "MakeId"
     const existing = skip ? undefined : await this.vehicleMakeTypeModel.findOne({
-      where: {
-        vehicle_make_id: makeId,
-      },
+      where: { vehicle_make_id: makeId }
     });
-    console.log("🚀 ~ VehicleMakeTypesService ~ create ~ existing:", existing)
-    if (existing) { return existing; }
+    console.log("🚀 ~ VehicleMakeTypesService ~ create ~ existing:", !!existing)
+    if (existing) return existing;
 
-    const jObj: XmlToJsonFormatResponse<XmlVehicleMakeTypesList> = await this.xmlUtilsService.getXML(XML_FIND_MAKEID(makeId));
+    // If no "Type" exists, fetch source XML and create missing records.
+    const jObj: XmlToJsonFormatResponse<XmlVehicleMakeTypesList> =
+      await this.xmlUtilsService.getXML(XML_FIND_MAKEID(makeId));
     console.log('🚀 ~ vehicle_make_types.service.ts:28 ~ VehicleMakeTypesService ~ create ~ jObj:', jObj);
     // return jObj;
     // jObj.Response.Results.VehicleTypesForMakeIds.VehicleTypeId
     const results = jObj.Response.Results.VehicleTypesForMakeIds; // Array or single Object
     const vecTypes = Array.isArray(results) ? results : [results];
-    const typeArr = vecTypes.map((vmType) => {
-      return this.vehicleMakeTypeModel.create({
-        vehicle_type_id: vmType.VehicleTypeId,
-        vehicle_type_name: vmType.VehicleTypeName,
-        vehicle_make_id: makeId,
-      });
-    });
+
+    // Wait until all records have been created.
+    const typeArr = await Promise.all(
+      vecTypes.map((vmType) => {
+        return this.vehicleMakeTypeModel.create({
+          vehicle_type_id: vmType.VehicleTypeId,
+          vehicle_type_name: vmType.VehicleTypeName,
+          vehicle_make_id: makeId,
+        });
+      }),
+    );
 
     return typeArr;
   }
