@@ -14,7 +14,6 @@ export interface IQuery {
 }
 
 export interface MakeType {
-    makeId: number;
     typeId: number;
     typeName?: Nullable<string>;
 }

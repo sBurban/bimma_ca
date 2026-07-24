@@ -2,7 +2,7 @@ import { ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { VehicleMakesService } from './vehicle-makes.service';
 
-import { VehicleMakes } from './models/vehicle_makes.model';
+// import { VehicleMakes } from './models/vehicle_makes.model';
 
 @Resolver('VehicleMake')
 export class VehicleMakeResolver {
@@ -22,9 +22,19 @@ export class VehicleMakeResolver {
 
   @Query('vehicleMake')
   async findOneByMakeId(
-    @Args('id', ParseIntPipe)
-    id: number,
-  ): Promise<VehicleMakes> {
-    return this.vehicleMakeService.findOne(id);
+    @Args('makeId', ParseIntPipe)
+    makeId: number,
+  ): Promise<any> {
+    const results = await this.vehicleMakeService.findOne(makeId);
+    const mapping = {
+      makeId: makeId,
+      makeName: results.getDataValue('makeName'),
+      vehicleTypes: results.vehicleTypes?.map(vt => ({
+          makeId,
+          typeId: vt.getDataValue('typeId'),
+          typeName: vt.getDataValue('typeName'),
+        })) ?? [],
+    };
+    return mapping;
   }
 }
