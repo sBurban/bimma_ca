@@ -7,3 +7,7 @@ export interface XmlToJsonFormatResponse<Type> {
     Results: Type;
   };
 }
+export type XmlVehicleMakeTypeEntity = { VehicleTypeId: number; VehicleTypeName: string };
+export type XmlVehicleMakeTypesList = {
+  VehicleTypesForMakeIds: XmlVehicleMakeTypeEntity[] | XmlVehicleMakeTypeEntity;
+};

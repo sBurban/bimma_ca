@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 
 import { XmlUtilsService } from 'src/common/services/XmlUtils/XmlUtilsl.service';
 import type { XmlVehicleMakeEntity, XmlAllVehicleMakes, XmlToJsonFormatResponse } from 'src/common/services/XmlUtils/XmlUtilsl';
@@ -17,7 +16,6 @@ export class VehicleMakesService {
   constructor(
     public sequelize: TSsequelize,
     @InjectModel(VehicleMakes) private vehicleMakeModel: typeof VehicleMakes,
-    private readonly httpService: HttpService,
     private vecMakeTypeService: VehicleMakeTypesService,
     private xmlUtilsService: XmlUtilsService,
   ) {}
@@ -52,23 +50,37 @@ export class VehicleMakesService {
   }
 
   async findOne(makeId: number): Promise<VehicleMakes> {
-    if (makeId) {
-      const jObj = await this.xmlUtilsService.getXML(XML_FIND_MAKEID(makeId));
-      return jObj;
-    }
-    const vecMake = await this.vehicleMakeModel.findOne({
-      where: {
-        make_id: makeId,
-      },
-      // include: [{ model: VehicleMakeTypes }],
-      include: [{ model: VehicleMakeTypes, required: true }],
-    });
-    // console.log("🚀 ~ VehicleMakesService ~ findOne ~ vecMake:", vecMake)
-    if (!vecMake) {
-      throw new NotFoundException(`VehicleMake with ID ${makeId} not found`);
-    }
+    // if (makeId) {
+    //   const jObj = await this.xmlUtilsService.getXML(XML_FIND_MAKEID(makeId));
+    //   return jObj;
+    // }
+    const vecIncludeItem = { model: VehicleMakeTypes, required: true };
+    const vecMakeOptions = {
+      where: { make_id: makeId },
+      include: [vecIncludeItem],
+    };
+    const vecMake = await this.vehicleMakeModel.findOne(vecMakeOptions);
+    console.log("🚀 ~ VehicleMakesService ~ findOne ~ vecMake:", vecMake)
     if (!vecMake) {
       // this.vecMakeTypeService
+      const added = await this.vecMakeTypeService.create({ makeId, skip: true });
+      console.log('🚀 ~ vehicle_makes.service.ts:71 ~ VehicleMakesService ~ findOne ~ added:', added);
+      if (added) {
+        const vMake2 = await this.vehicleMakeModel.findOne(vecMakeOptions);
+        console.log('🚀 ~ vehicle_makes.service.ts:74 ~ VehicleMakesService ~ findOne ~ vMake2:', vMake2);
+        if (vMake2) { return vMake2; }
+        else {
+          // throw new NotFoundException(`VehicleMake with ID ${makeId} not found`);
+          const newVecOptions = { ...vecMakeOptions, include: [{ ...vecIncludeItem, require: false }] }
+          const vMake3 = await this.vehicleMakeModel.findOne(newVecOptions);
+          console.log('🚀 ~ vehicle_makes.service.ts:80 ~ VehicleMakesService ~ findOne ~ vMake3:', vMake3);
+          if (vMake3) { return vMake3; }
+        }
+      }
+    }
+
+    if (!vecMake) {
+      throw new NotFoundException(`VehicleMake with ID ${makeId} not found`);
     }
 
     return vecMake;

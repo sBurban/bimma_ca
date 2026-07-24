@@ -33,4 +33,7 @@ error: pnpm install --strict-peer-dependencies=false
 > pnpm install --save @nestjs/axios axios
 > pnpm install fast-xml-parser
 
+---
 
+Index on Vehicle_Make_Types.vehicle_make_id, to improve query speeds.
+Normally would be a "junction table" between other 2 tables, but for this task, we don't really need to have a table dedicated to unique "Vehicle Types".
