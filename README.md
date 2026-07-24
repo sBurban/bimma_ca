@@ -64,8 +64,16 @@ Code-First "might be faster" to implement on NestJs, but I prefer "Schema-First"
 > pnpm approve-builds
 
 -approve to run post-install scripts
--`pnpm-workspace.yaml` stores the approved builds for future quick installations (automation/deployment)
+\-`pnpm-workspace.yaml` stores the approved builds for future quick installations (automation/deployment)
 
 > pn install
 
 -If needed, install missing peer-dependencies (PNPM ignores them by default)
+
+---
+
+Error Handling and Logging
+
+> $ pnpm install --save class-validator class-transformer
+
+- Added Global Interceptor for formatting REST responses

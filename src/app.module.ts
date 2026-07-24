@@ -14,6 +14,13 @@ import { AppService } from './app.service';
 import { VehicleMakesModule } from './modules/vehicle-makes/vehicle-makes.module';
 import { VehicleMakeTypesModule } from './modules/vehicle-make-types/vehicle-make-types.module';
 
+// GraphQLModule.forRoot({
+//   formatError: (error) => ({
+//     message: error.message,
+//     code: error.extensions?.code,
+//   }),
+// });
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
@@ -42,6 +49,10 @@ import { VehicleMakeTypesModule } from './modules/vehicle-make-types/vehicle-mak
         path: join(process.cwd(), 'src/graphql.d.ts'),
         skipResolverArgs: true,
       },
+      // formatError: (error) => ({
+      //   message: error.message,
+      //   code: error.extensions?.code,
+      // }),
     }),
     XmlUtilsModule,
     VehicleMakesModule,
