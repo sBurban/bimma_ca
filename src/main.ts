@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { TransformInterceptor } from './common/interceptors/TransformResponse.interceptor';
 
@@ -20,6 +21,15 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') || 3001;
+
+  // Swagger for generating automatic REST-API documentation and playground
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('BIMM-APP Backend')
+    .setDescription('Code Assessment API')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(port);
 }
