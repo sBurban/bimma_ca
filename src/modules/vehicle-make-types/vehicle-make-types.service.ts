@@ -1,15 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize as TSsequelize } from 'sequelize-typescript';
 
 import { XmlUtilsService } from 'src/common/services/XmlUtils/XmlUtilsl.service';
 import { XML_FIND_MAKEID } from 'src/common/constants/xml_uris.constants';
-import type { XmlToJsonFormatResponse, XmlVehicleMakeTypesList } from 'src/common/services/XmlUtils/XmlUtilsl';
+import type {
+  XmlToJsonFormatResponse,
+  XmlVehicleMakeTypesList,
+} from 'src/common/services/XmlUtils/XmlUtilsl';
 
 import { VehicleMakeTypes } from './models/vehicle_make_types.model';
 
 @Injectable()
 export class VehicleMakeTypesService {
+  private readonly logger = new Logger(VehicleMakeTypesService.name);
+
   constructor(
     public sequelize: TSsequelize,
     @InjectModel(VehicleMakeTypes)
@@ -17,21 +22,27 @@ export class VehicleMakeTypesService {
     private xmlUtilsService: XmlUtilsService,
   ) {}
 
-  async create({ makeId, skip = false }: { makeId: number; skip?: boolean; }) {
+  async create({ makeId, skip = false }: { makeId: number; skip?: boolean }) {
+    this.logger.verbose(`function [Create]: (MakeId: ${makeId}`);
     // Checks if at least 1 "Type" exists for "MakeId"
-    const existing = skip ? undefined : await this.vehicleMakeTypeModel.findOne({
-      where: { vehicle_make_id: makeId }
-    });
-    console.log("🚀 ~ VehicleMakeTypesService ~ create ~ existing:", !!existing)
+    const existing = skip
+      ? undefined
+      : await this.vehicleMakeTypeModel.findOne({
+          where: { vehicle_make_id: makeId },
+        });
     if (existing) return existing;
 
     // If no "Type" exists, fetch source XML and create missing records.
-    const jObj: XmlToJsonFormatResponse<XmlVehicleMakeTypesList> =
+    const parsedResponse: XmlToJsonFormatResponse<XmlVehicleMakeTypesList> =
       await this.xmlUtilsService.getXML(XML_FIND_MAKEID(makeId));
-    console.log('🚀 ~ vehicle_make_types.service.ts:28 ~ VehicleMakeTypesService ~ create ~ jObj:', jObj);
-    // return jObj;
-    // jObj.Response.Results.VehicleTypesForMakeIds.VehicleTypeId
-    const results = jObj.Response.Results.VehicleTypesForMakeIds; // Array or single Object
+
+    const results = parsedResponse?.Response?.Results?.VehicleTypesForMakeIds; // Array or single Object
+
+    if (!results) {
+      this.logger.error('FN [Create] stopped: XML Results Empty or malformed');
+      return undefined;
+    }
+
     const vecTypes = Array.isArray(results) ? results : [results];
 
     // Wait until all records have been created.
@@ -44,6 +55,10 @@ export class VehicleMakeTypesService {
         });
       }),
     );
+
+    this.logger.debug(`New VehicleMakeTypes created successfully`, {
+      data: typeArr,
+    });
 
     return typeArr;
   }

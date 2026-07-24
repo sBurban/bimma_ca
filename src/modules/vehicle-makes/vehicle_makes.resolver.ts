@@ -1,4 +1,4 @@
-import { ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Logger, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { VehicleMakesService } from './vehicle-makes.service';
 
@@ -6,6 +6,7 @@ import { VehicleMakesService } from './vehicle-makes.service';
 
 @Resolver('VehicleMake')
 export class VehicleMakeResolver {
+  private readonly logger = new Logger(VehicleMakeResolver.name);
   constructor(private vehicleMakeService: VehicleMakesService) {}
 
   @Query('vehicleMakes')
@@ -13,9 +14,14 @@ export class VehicleMakeResolver {
     @Args('limit', new DefaultValuePipe(0), ParseIntPipe) limit?: number,
     @Args('page', new DefaultValuePipe(0), ParseIntPipe) page?: number,
   ) {
+    this.logger.verbose('gql query [GetAllVehicleMakes]');
+
     const nLimit = !limit || limit < 0 ? 0 : limit;
     const nPage = !page || page < 0 ? 0 : page;
-    const results = await this.vehicleMakeService.findAll({ limit: nLimit, page: nPage });
+    const results = await this.vehicleMakeService.findAll({
+      limit: nLimit,
+      page: nPage,
+    });
     const mapping = results.map((m) => m.toJSON());
     return mapping;
   }
@@ -25,11 +31,14 @@ export class VehicleMakeResolver {
     @Args('makeId', ParseIntPipe)
     makeId: number,
   ): Promise<any> {
+    this.logger.verbose('gql query [FindOneByMakeId]');
+
     const results = await this.vehicleMakeService.findOne(makeId);
     const mapping = {
       makeId: makeId,
       makeName: results.getDataValue('makeName'),
-      vehicleTypes: results.vehicleTypes?.map(vt => ({
+      vehicleTypes:
+        results.vehicleTypes?.map((vt) => ({
           makeId,
           typeId: vt.getDataValue('typeId'),
           typeName: vt.getDataValue('typeName'),

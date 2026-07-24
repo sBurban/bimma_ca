@@ -11,20 +11,12 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new TransformInterceptor()); // Formats "Success" responses
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // Strips out Args/Params not stated in DTOs on controllers
-    forbidNonWhitelisted: true, // Changes Whitelist to Throw error when any unexpected Args/Params is received
-  }));
-
-  // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     transform: true, // Transform JS objects to expected DTO format on controllers
-  //     whitelist: true, // Strips out Args/Params not stated in DTOs on controllers
-  //     forbidUnknownValues: false, // Prevents inmediately failing "Unknown" objects
-  //     stopAtFirstError: true,
-  //   }),
-  // );
-
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Strips out Args/Params not stated in DTOs on controllers
+      forbidNonWhitelisted: true, // Changes Whitelist to Throw error when any unexpected Args/Params is received
+    }),
+  );
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') || 3001;

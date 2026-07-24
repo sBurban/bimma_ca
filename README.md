@@ -77,3 +77,5 @@ Error Handling and Logging
 > $ pnpm install --save class-validator class-transformer
 
 - Added Global Interceptor for formatting REST responses
+- Added dedicated Logging to the App.
+- NestJS has a default Global Exception-Filter for catching and formatting errors. Further customization is possible depending on requirements and priorities.
