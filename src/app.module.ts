@@ -1,13 +1,16 @@
+import { join } from 'node:path';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
-import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
+import configuration from './config/configuration';
 
 import { XmlUtilsModule } from './common/services/XmlUtils/XmlUtilsl.module';
 
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { VehicleMakesModule } from './modules/vehicle-makes/vehicle-makes.module';
 import { VehicleMakeTypesModule } from './modules/vehicle-make-types/vehicle-make-types.module';
 
@@ -29,6 +32,16 @@ import { VehicleMakeTypesModule } from './modules/vehicle-make-types/vehicle-mak
         synchronize: true, // Only True during Development
         logging: false,
       }),
+    }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      playground: false, // Deprecated
+      graphiql: true, // Playground
+      typePaths: ['./**/*.graphql'],
+      definitions: {
+        path: join(process.cwd(), 'src/graphql.d.ts'),
+        skipResolverArgs: true,
+      },
     }),
     XmlUtilsModule,
     VehicleMakesModule,

@@ -65,7 +65,7 @@ export class VehicleMakesService {
       include: [vecIncludeItem],
     };
     const vecMake = await this.vehicleMakeModel.findOne(vecMakeOptions);
-    console.log("🚀 ~ VehicleMakesService ~ findOne ~ vecMake:", !!vecMake)
+    console.log("🚀 ~ VehicleMakesService ~ findOne ~ vecMake:", vecMake)
     if (vecMake) return vecMake;
 
     // Create the "MakeType" records, then fetch the extended "VehicleMake" object.
@@ -88,7 +88,8 @@ export class VehicleMakesService {
   }
 
   // Fetch all records in "VehicleMake" table without extended attributes.
-  async findAll(limit: number, page: number): Promise<VehicleMakes[]> {
+  async findAll(args?: { limit: number, page: number } | undefined): Promise<VehicleMakes[]> {
+    const { limit = 0, page = 0 } = args ?? {};
     const check_records_exist = await this.vehicleMakeModel.count();
     console.log("🚀 ~ VehicleMakesService ~ findAll ~ check_records_exist:", check_records_exist, typeof check_records_exist)
     if (check_records_exist == 0) {

@@ -1,0 +1,36 @@
+type Query {
+  vehicleMakes(limit: Int, page: Int): [VehicleMakeBasic]
+  vehicleMake(makeId: ID!): VehicleMakeDetailed
+}
+
+type MakeType {
+  makeId: Int!
+  typeId: Int!
+  typeName: String
+  # vehicle_make_id: Int!
+}
+
+type VehicleMakeBasic {
+  makeId: Int!
+  makeName: String!
+}
+
+type VehicleMakeDetailed {
+  makeId: Int!
+  makeName: String!
+  vehicleTypes: [MakeType]
+}
+
+# type VehicleMake {
+#   makeId: Int!
+#   makeName: String!
+#   # make_id: Int!
+#   # make_name: String!
+#   vehicleTypes: [MakeType]
+# }
+
+# @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
+# @Query('limit', new DefaultValuePipe(0), ParseIntPipe) limit: number,
+
+# const typeAttributes = [['vehicle_type_id', 'typeId'], ['vehicle_type_name', 'typeName']] as FindAttributeOptions;
+# const makeAttributes = [['make_id', 'makeId'], ['make_name', 'makeName']] as FindAttributeOptions;

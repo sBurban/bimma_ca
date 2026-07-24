@@ -25,12 +25,12 @@ export class VehicleMakesController {
   // @ApiOperation(patientsDocs.findAll)
   @Get()
   async findAll(
-    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(0), ParseIntPipe) limit: number,
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
   ): Promise<VehicleMakes[]> {
     // Pagination Offset first record starts starts at 0
-    const nLimit = limit < 0 ? 0 : limit;
-    const nPage = page < 0 ? 0 : page;
-    return this.makeService.findAll(nLimit, nPage);
+    const nLimit = !limit || limit < 0 ? 0 : limit;
+    const nPage = !page || page < 0 ? 0 : page;
+    return this.makeService.findAll({ limit: nLimit, page: nPage });
   }
 }
