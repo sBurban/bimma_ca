@@ -12,6 +12,9 @@ import { VehicleMakes } from './models/vehicle_makes.model';
 import { VehicleMakeTypes } from '../vehicle-make-types/models/vehicle_make_types.model';
 import { VehicleMakeTypesService } from '../vehicle-make-types/vehicle-make-types.service';
 
+const typeAttributes = [['vehicle_type_id', 'typeId'], ['vehicle_type_name', 'typeName']] as FindAttributeOptions;
+const makeAttributes = [['make_id', 'makeId'], ['make_name', 'makeName']] as FindAttributeOptions;
+
 @Injectable()
 export class VehicleMakesService {
   constructor(
@@ -50,10 +53,8 @@ export class VehicleMakesService {
     }
   }
 
+  // Fetch extended object with Renamed Attributes
   async findOne(makeId: number): Promise<VehicleMakes> {
-    // Fetch extended object with Renamed Attributes
-    const typeAttributes = [['vehicle_type_id', 'typeId'], ['vehicle_type_name', 'typeName']] as FindAttributeOptions;
-    const makeAttributes = [['make_id', 'makeId'], ['make_name', 'makeName']] as FindAttributeOptions;
     const vecIncludeItem = {
       model: VehicleMakeTypes, required: true,
       attributes: typeAttributes,
@@ -86,6 +87,7 @@ export class VehicleMakesService {
     return vMake3;
   }
 
+  // Fetch all records in "VehicleMake" table without extended attributes.
   async findAll(limit: number, page: number): Promise<VehicleMakes[]> {
     const check_records_exist = await this.vehicleMakeModel.count();
     console.log("🚀 ~ VehicleMakesService ~ findAll ~ check_records_exist:", check_records_exist, typeof check_records_exist)
@@ -98,6 +100,7 @@ export class VehicleMakesService {
     }
 
     const vecMakes = await this.vehicleMakeModel.findAll({
+      attributes: makeAttributes,
       limit: limit == 0 ? undefined : limit,
       offset: limit == 0 ? undefined : page * 1000,
     });
