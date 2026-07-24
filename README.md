@@ -27,3 +27,10 @@ error: pnpm install --strict-peer-dependencies=false
   nest g mo modules/VehicleMakeTypes
   nest g co modules/VehicleMakeTypes/VehicleMakeTypes --flat
   nest g s modules/VehicleMakeTypes/VehicleMakeTypes --flat
+
+---
+
+> pnpm install --save @nestjs/axios axios
+> pnpm install fast-xml-parser
+
+
