@@ -20,17 +20,3 @@ type VehicleMakeDetailed {
   makeName: String!
   vehicleTypes: [MakeType]
 }
-
-# type VehicleMake {
-#   makeId: Int!
-#   makeName: String!
-#   # make_id: Int!
-#   # make_name: String!
-#   vehicleTypes: [MakeType]
-# }
-
-# @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
-# @Query('limit', new DefaultValuePipe(0), ParseIntPipe) limit: number,
-
-# const typeAttributes = [['vehicle_type_id', 'typeId'], ['vehicle_type_name', 'typeName']] as FindAttributeOptions;
-# const makeAttributes = [['make_id', 'makeId'], ['make_name', 'makeName']] as FindAttributeOptions;

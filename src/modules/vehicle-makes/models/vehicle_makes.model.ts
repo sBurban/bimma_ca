@@ -26,5 +26,5 @@ export class VehicleMakes extends Model {
   make_name: string;
 
   @HasMany(() => VehicleMakeTypes)
-  vehicleMakeTypes: VehicleMakeTypes[];
+  vehicleTypes: VehicleMakeTypes[];
 }
