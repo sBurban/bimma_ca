@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { XMLParser } from 'fast-xml-parser';
+
+import { XmlUtilsService } from 'src/common/services/XmlUtils/XmlUtilsl.service';
+import type { XmlVehicleMakeEntity, XmlAllVehicleMakes, XmlToJsonFormatResponse } from 'src/common/services/XmlUtils/XmlUtilsl';
+import { XML_FIND_ALL, XML_FIND_MAKEID } from 'src/common/constants/xml_uris.constants';
 
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize as TSsequelize } from 'sequelize-typescript';
@@ -9,16 +12,6 @@ import { VehicleMakes } from './models/vehicle_makes.model';
 import { VehicleMakeTypes } from '../vehicle-make-types/models/vehicle_make_types.model';
 import { VehicleMakeTypesService } from '../vehicle-make-types/vehicle-make-types.service';
 
-export type XmlVehicleMakeEntity = { Make_ID: number; Make_Name: string; }
-export type XmlAllVehicleMakes = { AllVehicleMakes: XmlVehicleMakeEntity[] }
-export interface XmlToJsonFormatResponse<Type> {
-  Response: {
-    Count: number;
-    Message: string;
-    Results: Type;
-  };
-}
-
 @Injectable()
 export class VehicleMakesService {
   constructor(
@@ -26,16 +19,8 @@ export class VehicleMakesService {
     @InjectModel(VehicleMakes) private vehicleMakeModel: typeof VehicleMakes,
     private readonly httpService: HttpService,
     private vecMakeTypeService: VehicleMakeTypesService,
+    private xmlUtilsService: XmlUtilsService,
   ) {}
-
-  parseXmlToJson = (xmlData: string) => {
-    // parseXmlToJson = <Type>(xmlData: string) => {
-    console.log("Entered function [parseXmlToJson]")
-    const parser = new XMLParser();
-    // const jObj: XmlToJsonFormatResponse<Type> = parser.parse(xmlData);
-    const jObj = parser.parse(xmlData);
-    return jObj;
-  };
 
   async initTableRows(allVehicleMakes: XmlVehicleMakeEntity[]) {
     const BULK_SIZE = 500;
@@ -66,16 +51,9 @@ export class VehicleMakesService {
     }
   }
 
-  async getXML(uri: string) {
-    const response = await this.httpService.axiosRef.get(uri);
-
-    const jObj = this.parseXmlToJson(response.data);
-    return jObj;
-  }
-
   async findOne(makeId: number): Promise<VehicleMakes> {
     if (makeId) {
-      const jObj = await this.getXML(`https://vpic.nhtsa.dot.gov/api/vehicles/GetVehicleTypesForMakeId/${makeId}?format=xml`);
+      const jObj = await this.xmlUtilsService.getXML(XML_FIND_MAKEID(makeId));
       return jObj;
     }
     const vecMake = await this.vehicleMakeModel.findOne({
@@ -101,8 +79,8 @@ export class VehicleMakesService {
     console.log("🚀 ~ VehicleMakesService ~ findAll ~ check_records_exist:", check_records_exist, typeof check_records_exist)
     if (check_records_exist == 0) {
       console.log("Fetching source XML file.")
-      const jObj: XmlToJsonFormatResponse<XmlAllVehicleMakes> = await this.getXML('https://vpic.nhtsa.dot.gov/api/vehicles/getallmakes?format=XML');
-      console.log("Initializing Database Records.")
+      const jObj: XmlToJsonFormatResponse<XmlAllVehicleMakes> =
+        await this.xmlUtilsService.getXML(XML_FIND_ALL); console.log("Initializing Database Records.")
       await this.initTableRows(jObj.Response.Results.AllVehicleMakes);
       console.log("Table has been populated. Ready for querying")
     }

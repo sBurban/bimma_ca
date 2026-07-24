@@ -6,10 +6,12 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { VehicleMakes } from './models/vehicle_makes.model';
 import { HttpModule } from '@nestjs/axios';
 
+import { XmlUtilsModule } from 'src/common/services/XmlUtils/XmlUtilsl.module';
+
 import { VehicleMakeTypesModule } from '../vehicle-make-types/vehicle-make-types.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([VehicleMakes]), HttpModule, VehicleMakeTypesModule],
+  imports: [SequelizeModule.forFeature([VehicleMakes]), HttpModule, XmlUtilsModule, VehicleMakeTypesModule],
   controllers: [VehicleMakesController],
   providers: [VehicleMakesService],
   exports: [VehicleMakesService],

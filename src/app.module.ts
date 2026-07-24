@@ -6,6 +6,8 @@ import configuration from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 
+import { XmlUtilsModule } from './common/services/XmlUtils/XmlUtilsl.module';
+
 import { VehicleMakesModule } from './modules/vehicle-makes/vehicle-makes.module';
 import { VehicleMakeTypesModule } from './modules/vehicle-make-types/vehicle-make-types.module';
 
@@ -28,12 +30,11 @@ import { VehicleMakeTypesModule } from './modules/vehicle-make-types/vehicle-mak
         logging: false,
       }),
     }),
+    XmlUtilsModule,
     VehicleMakesModule,
     VehicleMakeTypesModule,
   ],
-  controllers: [
-    AppController,
-  ],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

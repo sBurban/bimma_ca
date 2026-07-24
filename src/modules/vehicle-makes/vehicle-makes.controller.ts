@@ -1,6 +1,5 @@
 import {
   Controller,
-  BadRequestException,
   DefaultValuePipe,
   Get,
   Param,
