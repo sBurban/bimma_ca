@@ -1,52 +1,157 @@
-# bimma_ca
+<!-- BIMM Code Assesment App -->
 
-> nest new bimm_ac
+# Installation
 
-- pnpm
+**IMPORTANT**:
+-Docker is mandatory for the app to run.
+-DB must be initialized before the app.
+-Ports 5433 and 3001 on your PC must be free.
 
-error: pnpm install --strict-peer-dependencies=false
+**1.Install the libraries.**
+`PNPM` files should already have locked and approved the necessary libraries for running the app.
 
-> pnpm approve-builds
+```bash
+$ pnpm install
+```
 
-- Spacebar to select "@nestjs/core"
-- Enter
-- y
+**2.Create your own `.env` file.**
+Then add your own values for the attributes in the `.env.development` file.
+Note: The ports values must remain the same.
 
-> pnpm install
+```bash
+$ cp .env.development .env
+```
 
-> pnpm install @nestjs/config @nestjs/sequelize sequelize sequelize-typescript pg
+**3.Initialize Docker by running the Docker-Compose file.**
+Note: Remember you need `Docker Desktop` installed for this to work! (instructions vary depending on OS)
+
+```bash
+$ docker-compose up -d
+```
+
+**4.Run the App**
+
+```bash
+$ pnpm start
+
+or
+
+$ pnpm start:dev
+```
+
+## Using "Adminer" for DB management
+
+Go to `http://localhost:8081/` to access the Adminer UI.
+Then add the following values as credentials:
+
+- System: PostgreSQL
+- Server: postgres
+- Username: {{ DB_USERNAME }}
+- Password: {{ DB_PASSWORD }}
+- Database: {{ DB_NAME }}
+
+From there, see the left column and make sure the following is correct: `DB:{{ DB_NAME }}` and `Schema:public`.
+Now you can use the UI to see the Tables and data stored in the configured PostgreSQL.
 
 ---
 
-- co: controller
-- mo: module
-- s: service
-  nest g mo modules/VehicleMakes
-  nest g co modules/VehicleMakes/VehicleMakes --flat
-  nest g s modules/VehicleMakes/VehicleMakes --flat
-  nest g mo modules/VehicleMakeTypes
-  nest g co modules/VehicleMakeTypes/VehicleMakeTypes --flat
-  nest g s modules/VehicleMakeTypes/VehicleMakeTypes --flat
+# Database
+
+IMPORTANT:
+Normally all Database changes are handled via Migration files.
+However for sake of speed in this assessment, I decided to make use of Sequelize features for quickly initializing (and updating) the Database via code.
+Specifically the `synchronize` feature.
+This feature is good for quick Demos and development, but is usually turned off for long projects and production environments.
+
+```ts
+// app.module.ts
+...
+SequelizeModule.forRootAsync({
+  ...
+  useFactory: (config: ConfigService) => ({
+    ...
+    autoLoadModels: true, // Automatically loads all Models files into Sequelize (no need for specifying individually)
+    synchronize: true, // Automatically creates Tables on the Database
+    ...
+  })
+  ...
+}),
+...
+
+```
+
+## Tables
+
+We only have 2 tables for this assessment:
+
+- `VehicleMakes`,
+  the main table
+
+- `VehicleMakeTypes`,
+  secondary table, dependent on "VehicleMakes".
+
+`VehicleMakes` has a 1-to-many relationship with `VehicleMakeTypes`.
+
+Normally the "VehicleMakeTypes" table would be a "junction table" between other 2 tables, but for this task.
+However we don't really need to have a table dedicated for unique "Vehicle Types", as that information isn't required.
+
+Below we can see the SQL used by Sequelize to create the tables:
+
+```sql
+-- Table: public.VehicleMakes
+
+-- DROP TABLE IF EXISTS public."VehicleMakes";
+CREATE TABLE IF NOT EXISTS public."VehicleMakes"
+(
+    make_id integer NOT NULL,
+    make_name character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT "VehicleMakes_pkey" PRIMARY KEY (make_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public."VehicleMakes"
+    OWNER to ca_user;
+```
+
+Note an "Index" was added on `Vehicle_Make_Types.vehicle_make_id`, to improve query speeds.
+This was done in preparation for an "extended FindAll" feature, left incomplete. More details in the API section.
+
+```sql
+-- Table: public.VehicleMakeTypes
+
+-- DROP TABLE IF EXISTS public."VehicleMakeTypes";
+
+CREATE TABLE IF NOT EXISTS public."VehicleMakeTypes"
+(
+    vehicle_type_id integer NOT NULL,
+    vehicle_type_name character varying(255) COLLATE pg_catalog."default",
+    vehicle_make_id integer,
+    CONSTRAINT "VehicleMakeTypes_pkey" PRIMARY KEY (vehicle_type_id),
+    CONSTRAINT "VehicleMakeTypes_vehicle_make_id_fkey" FOREIGN KEY (vehicle_make_id)
+        REFERENCES public."VehicleMakes" (make_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public."VehicleMakeTypes"
+    OWNER to ca_user;
+```
 
 ---
 
-> pnpm install --save @nestjs/axios axios
-> pnpm install fast-xml-parser
+# Code Structure and Decisions
 
----
-
-Index on Vehicle_Make_Types.vehicle_make_id, to improve query speeds.
-Normally would be a "junction table" between other 2 tables, but for this task, we don't really need to have a table dedicated to unique "Vehicle Types".
-
----
-
-GRAPHQL METHODS
+## GraphQL Method Selection
 
 NestJs has 2 methodologies for configuring GraphQL.
 
 - Code-First
 - Schema-First
 
+For the assessment, I used the `Schema-first` approach.
 Code-First "might be faster" to implement on NestJs, but I prefer "Schema-First" for several reasons:
 
 - Files location structure is more intuitive, similar to how REST files would normally be organized.
@@ -55,27 +160,9 @@ Code-First "might be faster" to implement on NestJs, but I prefer "Schema-First"
   - Backend migration to another Tech stack.
   - Hosting the Schema files on a central registry for Microservices purposes
 
-# For Express and Apollo (default)
+## Error Handling and Logging
 
-> pnpm i ts-morph @nestjs/graphql @nestjs/apollo @apollo/server @as-integrations/express5 graphql
-
-[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @apollo/protobufjs@1.2.8
-
-> pnpm approve-builds
-
--approve to run post-install scripts
-\-`pnpm-workspace.yaml` stores the approved builds for future quick installations (automation/deployment)
-
-> pn install
-
--If needed, install missing peer-dependencies (PNPM ignores them by default)
-
----
-
-Error Handling and Logging
-
-> $ pnpm install --save class-validator class-transformer
-
-- Added Global Interceptor for formatting REST responses
-- Added dedicated Logging to the App.
-- NestJS has a default Global Exception-Filter for catching and formatting errors. Further customization is possible depending on requirements and priorities.
+- Added `Global Interceptor` for formatting REST responses
+- Added dedicated `class/service Loggers` to the App, so it's easier to identify where the logs come from.
+- NestJS has a `default Global Exception-Filter` for catching and formatting errors.
+  Although it wasn't implemented in this assessment, further customization is possible depending on requirements and priorities.
